@@ -1,5 +1,5 @@
 // components/TaskList.test.tsx
-import { describe, test, expect, jest, beforeEach } from '@jest/globals';
+import { describe, test, jest, beforeEach } from '@jest/globals';
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { axe } from 'jest-axe';

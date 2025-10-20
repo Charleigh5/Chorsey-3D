@@ -1,5 +1,5 @@
 // components/Auth.test.tsx
-import { describe, test, expect, jest } from '@jest/globals';
+import { describe, test, jest } from '@jest/globals';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { axe } from 'jest-axe';
