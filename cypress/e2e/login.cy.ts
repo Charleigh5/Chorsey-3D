@@ -1,4 +1,4 @@
-// cypress/e2e/login.cy.ts
+/// <reference types="cypress" />
 
 describe('User Login Flow', () => {
   it('allows an admin user to log in and view the admin dashboard', () => {

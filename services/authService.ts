@@ -6,7 +6,7 @@ const users: User[] = [
     { id: 'user-2', name: 'Sam', email: 'user@chorsey.com', role: UserRole.PARTICIPANT, avatarUrl: 'https://picsum.photos/seed/sam/100/100', points: 800 },
 ];
 
-export const login = async (email: string, password?: string): Promise<User> => {
+export const login = async (email: string): Promise<User> => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
@@ -21,7 +21,7 @@ export const login = async (email: string, password?: string): Promise<User> => 
     });
 };
 
-export const register = async (name: string, email: string, password?: string): Promise<User> => {
+export const register = async (name: string, email: string): Promise<User> => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {

@@ -23,9 +23,10 @@ export const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
     try {
       let user;
       if (isLogin) {
-        user = await login(email, password);
+        // Mock service does not use password, but we keep the field for UI realism
+        user = await login(email);
       } else {
-        user = await register(name, email, password);
+        user = await register(name, email);
       }
       onLoginSuccess(user);
     } catch (err) {

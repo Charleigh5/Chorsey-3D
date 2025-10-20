@@ -3,24 +3,7 @@ import { fetchTasksForUser, fetchAllTasks } from '../services/mockApiService';
 import type { TaskWithDetails } from '../types';
 import { UserRole } from '../types';
 import { TaskCard } from './TaskCard';
-
-const TaskListSkeleton: React.FC = () => (
-  <div className="space-y-4">
-    {[...Array(4)].map((_, i) => (
-      <div key={i} className="bg-gray-800 rounded-lg shadow-lg animate-pulse">
-         <div className="p-5">
-            <div className="flex justify-between items-start">
-              <div className="h-5 bg-gray-700 rounded w-3/4"></div>
-              <div className="h-5 bg-gray-700 rounded w-1/6"></div>
-            </div>
-            <div className="h-3 bg-gray-700 rounded w-1/2 mt-3"></div>
-            <div className="h-8 bg-gray-700 rounded w-full mt-4"></div>
-        </div>
-        <div className="h-12 bg-gray-700/50 rounded-b-lg"></div>
-      </div>
-    ))}
-  </div>
-);
+import { TaskListSkeleton } from './TaskListSkeleton';
 
 interface TaskListProps {
   userId: string;
@@ -55,7 +38,15 @@ export const TaskList: React.FC<TaskListProps> = ({ userId, userRole }) => {
 
   const renderContent = () => {
     if (loading) {
-      return <TaskListSkeleton />;
+      return (
+          <>
+              {/* This element is visually hidden but read by screen readers */}
+              <div role="status" className="sr-only">
+                  Loading tasks...
+              </div>
+              <TaskListSkeleton />
+          </>
+      );
     }
 
     if (error) {
@@ -78,7 +69,7 @@ export const TaskList: React.FC<TaskListProps> = ({ userId, userRole }) => {
     return (
       <div className="space-y-4">
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} showAssignee={isAdmin} />
+          <TaskCard key={task.id} task={task} showAssignee={isAdmin} userRole={userRole} />
         ))}
       </div>
     );

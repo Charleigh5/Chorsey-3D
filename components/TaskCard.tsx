@@ -1,11 +1,12 @@
 import React from 'react';
 import type { TaskWithDetails } from '../types';
-import { TaskStatus } from '../types';
+import { TaskStatus, UserRole } from '../types';
 import { CoinIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon } from './icons';
 
 interface TaskCardProps {
   task: TaskWithDetails;
   showAssignee?: boolean;
+  userRole: UserRole;
 }
 
 const statusConfig = {
@@ -46,8 +47,34 @@ const statusConfig = {
   },
 };
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, showAssignee = false }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({ task, showAssignee = false, userRole }) => {
   const config = statusConfig[task.status];
+  const isAdmin = userRole === UserRole.ADMIN;
+
+  const renderActionButtons = () => {
+    if (isAdmin && task.status === TaskStatus.SUBMITTED) {
+      return (
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-1.5 rounded-md font-semibold text-xs text-white bg-red-600 hover:bg-red-700 transition-colors">
+              Reject
+          </button>
+          <button className="px-3 py-1.5 rounded-md font-semibold text-xs text-white bg-green-600 hover:bg-green-700 transition-colors">
+              Approve
+          </button>
+        </div>
+      );
+    }
+    
+    return (
+      <button
+        className={`px-4 py-2 rounded-md font-semibold text-sm transition-colors duration-200 ${config.buttonClasses}`}
+        disabled={task.status === TaskStatus.SUBMITTED || task.status === TaskStatus.APPROVED}
+      >
+        {config.buttonLabel}
+      </button>
+    );
+  };
+
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform hover:scale-[1.02] duration-300">
@@ -82,12 +109,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, showAssignee = false }
                 </div>
             )}
         </div>
-        <button
-          className={`px-4 py-2 rounded-md font-semibold text-sm transition-colors duration-200 ${config.buttonClasses}`}
-          disabled={task.status === TaskStatus.SUBMITTED || task.status === TaskStatus.APPROVED}
-        >
-          {config.buttonLabel}
-        </button>
+        {renderActionButtons()}
       </div>
     </div>
   );

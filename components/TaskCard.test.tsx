@@ -1,5 +1,4 @@
 // components/TaskCard.test.tsx
-// FIX: Import Jest's global functions to resolve TypeScript errors.
 import { describe, test, expect } from '@jest/globals';
 import React from 'react';
 import { render } from '@testing-library/react';
@@ -26,13 +25,13 @@ const mockTask: TaskWithDetails = {
 
 describe('TaskCard Component', () => {
   test('should have no accessibility violations in default view', async () => {
-    const { container } = render(<TaskCard task={mockTask} />);
+    const { container } = render(<TaskCard task={mockTask} userRole={UserRole.PARTICIPANT} />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 
   test('should have no accessibility violations in assignee view', async () => {
-    const { container } = render(<TaskCard task={mockTask} showAssignee={true} />);
+    const { container } = render(<TaskCard task={mockTask} showAssignee={true} userRole={UserRole.ADMIN} />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

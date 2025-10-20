@@ -1,5 +1,4 @@
 // components/Auth.test.tsx
-// FIX: Import Jest's global functions to resolve TypeScript errors.
 import { describe, test, expect, jest } from '@jest/globals';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';

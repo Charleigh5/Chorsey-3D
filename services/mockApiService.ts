@@ -65,8 +65,6 @@ export const createTask = async (taskData: Omit<Task, 'id' | 'status'>): Promise
 };
 
 const enrichTasks = (tasks: Task[]): TaskWithDetails[] => {
-    // FIX: Add explicit return type to the map callback to guide TypeScript's type inference.
-    // This prevents an error where the type predicate in .filter is considered invalid.
     return tasks.map((task): TaskWithDetails | null => {
         const assignedUser = mockUsers.find(u => u.id === task.assignedTo);
         const assignedAsset = mockAssets.find(a => a.id === task.assignedAssetId);
