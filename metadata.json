@@ -1,0 +1,5 @@
+{
+  "name": "Chorsey - Gamified Chore Management",
+  "description": "An application to manage household chores using an interactive 3D model of your home, complete with tasks, rewards, and verification, based on a microservices architecture.",
+  "requestFramePermissions": []
+}

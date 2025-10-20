@@ -1,0 +1,89 @@
+import React, { useState, useEffect } from 'react';
+import { fetchTasksForUser } from '../services/mockApiService';
+import type { TaskWithDetails } from '../types';
+import { TaskCard } from './TaskCard';
+
+const TaskListSkeleton: React.FC = () => (
+  <div className="space-y-4">
+    {[...Array(4)].map((_, i) => (
+      <div key={i} className="bg-gray-800 rounded-lg shadow-lg p-5 animate-pulse">
+        <div className="flex justify-between items-start">
+          <div className="h-5 bg-gray-700 rounded w-3/4"></div>
+          <div className="h-5 bg-gray-700 rounded w-1/6"></div>
+        </div>
+        <div className="h-3 bg-gray-700 rounded w-1/2 mt-2"></div>
+        <div className="h-8 bg-gray-700 rounded w-full mt-4"></div>
+        <div className="h-10 bg-gray-700/50 rounded-b-lg -m-5 mt-5"></div>
+      </div>
+    ))}
+  </div>
+);
+
+interface TaskListProps {
+  userId: string;
+}
+
+export const TaskList: React.FC<TaskListProps> = ({ userId }) => {
+  const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const loadTasks = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const fetchedTasks = await fetchTasksForUser(userId);
+        setTasks(fetchedTasks);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTasks();
+  }, [userId]);
+
+  const renderContent = () => {
+    if (loading) {
+      return <TaskListSkeleton />;
+    }
+
+    if (error) {
+      return (
+        <div className="bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg text-center">
+          <p className="font-semibold">Failed to load tasks</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      );
+    }
+
+    if (tasks.length === 0) {
+      return (
+        <div className="bg-gray-800 p-8 rounded-lg text-center text-gray-400">
+          <p>No tasks assigned right now. Great job!</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {tasks.map(task => (
+          <TaskCard key={task.id} task={task} />
+        ))}
+      </div>
+    );
+  };
+  
+  return (
+    <section className="h-full" aria-labelledby="tasks-heading">
+      <h2 id="tasks-heading" className="text-2xl font-bold text-white mb-4 px-1">
+        Your Tasks
+      </h2>
+      {renderContent()}
+    </section>
+  );
+};
