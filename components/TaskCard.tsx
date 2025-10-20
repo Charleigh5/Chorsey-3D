@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { TaskWithDetails } from '../types';
 import { TaskStatus } from '../types';
@@ -6,6 +5,7 @@ import { CoinIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon } from '.
 
 interface TaskCardProps {
   task: TaskWithDetails;
+  showAssignee?: boolean;
 }
 
 const statusConfig = {
@@ -46,7 +46,7 @@ const statusConfig = {
   },
 };
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({ task, showAssignee = false }) => {
   const config = statusConfig[task.status];
 
   return (
@@ -70,9 +70,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       </div>
 
       <div className="bg-gray-700/50 px-5 py-3 flex justify-between items-center">
-        <div className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1 rounded-full ${config.badgeClasses}`}>
-          {config.icon}
-          {config.label}
+        <div className="flex items-center gap-4">
+            <div className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1 rounded-full ${config.badgeClasses}`}>
+              {config.icon}
+              {config.label}
+            </div>
+            {showAssignee && (
+                <div className="flex items-center gap-2">
+                    <img src={task.assignedUser.avatarUrl} alt={task.assignedUser.name} className="w-6 h-6 rounded-full" />
+                    <span className="text-xs text-gray-300 font-medium">{task.assignedUser.name}</span>
+                </div>
+            )}
         </div>
         <button
           className={`px-4 py-2 rounded-md font-semibold text-sm transition-colors duration-200 ${config.buttonClasses}`}
