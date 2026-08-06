@@ -52,8 +52,10 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run offline WebGL browser smoke test
-        run: npm run test:browser
+      - name: Run offline WebGL2 browser proof
+        env:
+          HEADLESS: 'false'
+        run: xvfb-run -a npm run test:browser
 
       - name: Upload evidence and browser proof
         if: always()
