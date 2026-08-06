@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>UEViewer Asset Evidence — __EVIDENCE_TITLE__</title>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2d;--line:#254463;--text:#edf5ff;--muted:#a9bdd2;--accent:#66b8ff;--ok:#77d69a;--warn:#f3c76b;--bad:#ff8e8e;font-family:Inter,Segoe UI,system-ui,sans-serif}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#050b14,#0d1c31);color:var(--text)}header{padding:1rem 1.2rem;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:1rem;align-items:center;background:#081426e8;position:sticky;top:0;z-index:3}h1{font-size:1.05rem;margin:0}.status{padding:.35rem .6rem;border:1px solid var(--line);border-radius:99px;color:var(--ok);font-weight:800;font-size:.78rem}.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;min-height:calc(100vh - 65px)}.view{position:relative;min-height:620px}canvas{width:100%;height:100%;display:block;background:radial-gradient(circle at 50% 35%,#183752,#07111f 65%)}.hud{position:absolute;left:1rem;top:1rem;padding:.65rem .8rem;background:#07111fd9;border:1px solid var(--line);border-radius:.7rem;color:var(--muted);font-size:.78rem}.side{border-left:1px solid var(--line);background:#091728;overflow:auto;padding:1rem}.card{background:var(--panel);border:1px solid var(--line);border-radius:.8rem;padding:.9rem;margin-bottom:.8rem}.card h2{font-size:.9rem;margin:0 0 .7rem;color:var(--accent)}dl{display:grid;grid-template-columns:1fr auto;gap:.4rem .75rem;margin:0;font-size:.8rem}dt{color:var(--muted)}dd{margin:0;text-align:right;word-break:break-all}.hash{font-family:ui-monospace,Consolas,monospace;font-size:.68rem}.tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem}button{border:1px solid var(--line);background:#102b46;color:var(--text);padding:.5rem .65rem;border-radius:.5rem;cursor:pointer;font-weight:700}button:hover{filter:brightness(1.15)}pre{white-space:pre-wrap;word-break:break-word;font-size:.72rem;color:#cfe5f8;max-height:420px;overflow:auto}.error{color:var(--bad)}.warn{color:var(--warn)}@media(max-width:900px){.layout{grid-template-columns:1fr}.side{border-left:0;border-top:1px solid var(--line)}.view{min-height:520px}}
+</style>
+</head>
+<body>
+<header><div><div style="color:var(--accent);font-size:.7rem;font-weight:900;letter-spacing:.12em">READ-ONLY • OFFLINE • SOURCE-GOVERNED</div><h1>__EVIDENCE_TITLE__</h1></div><div class="status" id="renderStatus">INITIALIZING</div></header>
+<main class="layout"><section class="view"><canvas id="view" aria-label="Embedded glTF evidence viewer"></canvas><div class="hud">Drag to orbit • Wheel to zoom • No network access</div></section><aside class="side"><div class="tabs"><button data-tab="summary">Summary</button><button data-tab="manifest">Manifest</button><button data-tab="inventory">Inventory</button><button data-tab="validation">Validation</button><button data-tab="receipt">Receipt</button></div><div id="summary"></div><pre id="json" hidden></pre></aside></main>
+<script id="evidence" type="application/json">__EVIDENCE_PAYLOAD__</script>
+<script>
+'use strict';
+(function(){
+  const E=JSON.parse(document.getElementById('evidence').textContent);
+  const $=s=>document.querySelector(s);
+  const status=$('#renderStatus');
+  const canvas=$('#view');
+  const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function showSummary(){
+    const m=E.manifest,v=E.validation.summary;
+    $('#summary').innerHTML='<section class="card"><h2>Selection</h2><dl>'+
+      '<dt>Package</dt><dd>'+esc(m.selection.packageRelativePath)+'</dd>'+
+      '<dt>Object</dt><dd>'+esc(m.selection.objectName)+'</dd>'+
+      '<dt>Source SHA-256</dt><dd class="hash">'+esc(m.source.selectedPackageSha256)+'</dd>'+
+      '<dt>Canonical evidence hash</dt><dd class="hash">'+esc(m.output.canonicalHtmlSha256)+'</dd>'+
+      '</dl></section><section class="card"><h2>Geometry</h2><dl>'+
+      '<dt>Meshes</dt><dd>'+v.meshCount+'</dd><dt>Primitives</dt><dd>'+v.primitiveCount+'</dd>'+
+      '<dt>Vertices</dt><dd>'+v.vertexCount+'</dd><dt>Indices</dt><dd>'+v.indexCount+'</dd>'+
+      '<dt>Materials</dt><dd>'+v.materialCount+'</dd><dt>Textures</dt><dd>'+v.textureCount+'</dd>'+
+      '</dl></section><section class="card"><h2>Validation</h2><div class="'+(E.validation.errors.length?'error':E.validation.warnings.length?'warn':'')+'">'+esc(E.validation.status)+'</div><p style="color:var(--muted);font-size:.78rem">'+esc(E.validation.validationClass)+'</p></section>';
+  }
+  showSummary();
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{const key=b.dataset.tab;if(key==='summary'){showSummary();$('#summary').hidden=false;$('#json').hidden=true}else{$('#summary').hidden=true;$('#json').hidden=false;$('#json').textContent=JSON.stringify(E[key],null,2)}});
+  const gl=canvas.getContext('webgl2',{antialias:true});
+  if(!gl){status.textContent='WEBGL2 UNAVAILABLE';status.className='status error';return;}
+  try{
+    function b64(s){const x=atob(s),a=new Uint8Array(x.length);for(let i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}
+    function resource(uri){if(uri.startsWith('data:'))return b64(uri.slice(uri.indexOf(',')+1));const r=E.resources[decodeURIComponent(uri)];if(!r)throw new Error('Missing resource '+uri);return b64(r.base64);}
+    const G=E.model;
+    const bufs=G.buffers.map(b=>resource(b.uri));
+    const comps={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array};
+    const sizes={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT2:4,MAT3:9,MAT4:16};
+    function accessor(i){const a=G.accessors[i],v=G.bufferViews[a.bufferView],C=comps[a.componentType],n=sizes[a.type],offset=(v.byteOffset||0)+(a.byteOffset||0),stride=v.byteStride||C.BYTES_PER_ELEMENT*n,src=bufs[v.buffer];if(stride===C.BYTES_PER_ELEMENT*n)return new C(src.buffer,src.byteOffset+offset,a.count*n);const out=new C(a.count*n),dv=new DataView(src.buffer,src.byteOffset+offset);for(let q=0;q<a.count;q++)for(let c=0;c<n;c++){const o=q*stride+c*C.BYTES_PER_ELEMENT;out[q*n+c]=a.componentType===5126?dv.getFloat32(o,true):a.componentType===5125?dv.getUint32(o,true):a.componentType===5123?dv.getUint16(o,true):a.componentType===5122?dv.getInt16(o,true):a.componentType===5121?dv.getUint8(o):dv.getInt8(o);}return out;}
+    const vs='#version 300 es\nin vec3 p;in vec3 n;uniform mat4 mvp;uniform mat4 model;out vec3 N;void main(){gl_Position=mvp*vec4(p,1.0);N=mat3(model)*n;}';
+    const fs='#version 300 es\nprecision highp float;in vec3 N.uniform vec4 color;out vec4 o;void main(){float l=.35+.65*max(dot(normalize(N),normalize(vec3(.4,.7,.6))),0.0);o=vec4(color.rgb*l,color.a);}';
+    function shader(t,s){const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(x));return x;}
+    const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vs));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(prog));gl.useProgram(prog);
+    const draws=[];
+    for(const mesh of G.model.meshes||[])for(const pr of mesh.primitives||[]){if(pr.attributes?.POSITION===undefined)continue;const pos=accessor(pr.attributes.POSITION),norm=pr.attributes.NORMAL!==undefined?accessor(pr.attributes.NORMAL):new Float32Array(pos.length);if(pr.attributes.NORMAL===undefined)for(let i=2;i<norm.length;i+=3)norm[i]=1;const vao=gl.createVertexArray();gl.bindVertexArray(vao);for(const item of [['p',pos,3],['n',norm,3]]){const name=item[0],data=item[1],size=item[2],loc=gl.getAttribLocation(prog,name),b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,0,0);}let indices=null,type=null;if(pr.indices!==undefined){indices=accessor(pr.indices);const b=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);type=indices instanceof Uint32Array?gl.UNSIGNED_INT:indices instanceof Uint16Array?gl.UNSIGNED_SHORT:gl.UNSIGNED_BYTE;}const factor=G.materials?.[pr.material]?.pbrMetallicRoughness?.baseColorFactor||[.25,.6,.9,1];draws.push({vao,count:indices?indices.length:pos.length/3,type,color:factor,indexed:!!indices});}
+    let yaw=.6,pitch=.25,dist=3.2,down=false,lx=0,ly=0;
+    canvas.onpointerdown=e=>{down=true;lx=e.clientX;ly=e.clientY;canvas.setPointerCapture(e.pointerId);};canvas.onpointerup=()=>down=false;canvas.onpointermove=e=>{if(!down)return;yaw+=(e.clientX-lx)*.01;pitch=Math.max(-1.3,Math.min(1.3,pitch+(e.clientY-ly)*.01));lx=e.clientX;ly=e.clientY;};canvas.onwheel=e=>{e.preventDefault();dist=Math.max(.5,Math.min(20,dist*Math.exp(e.deltaY*.001)));};
+    const I=()=>new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+    function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o;}
+    function persp(f,a,n,z){const t=1/Math.tan(f/2),o=new Float32Array(16);o[0]=t/a;o[5]=t;o[10]=(z+n)/(n-z);o[11]=-1;o[14]=2*z*n/(n-z);return o;}
+    function look(ex,ey,ez){const fLen=Math.hypot(ex,ey,ez),fx=-ex/fLen,fy=-ey/fLen,fz=-ez/fLen;let sx=fz,sy=0,sz=-fx;const sLen=Math.hypot(sx,sy,sz)||1;sx/=sLen;sy/=sLen;sz/=sLen;const ux=sy*fz-sz*fy,uy=sz*fx-sx*fz,uz=sx*fy-sy*fx;const o=I();o[0]=sx;o[1]=ux;o[2]=-fx;o[4]=sy;o[5]=uy;o[6]=-fy;o[8]=sz;o[9]=uz;o[10]=-fz;o[12]=-(sx*ex+sy*ey+sz*ez);o[13]=-(ux*ex+uy*ey+uz*ez);o[14]=fx*ex+fy*ey+fz*ez;return o;}
+    function frame(){const d=devicePixelRatio||1,w=Math.round(canvas.clientWidth*d),h=Math.round(canvas.clientHeight*d);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);gl.enable(gl.DEPTH_TEST);gl.clearColor(.025,.065,.11,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);const ex=Math.sin(yaw)*Math.cos(pitch)*dist,ey=Math.sin(pitch)*dist,ez=Math.cos(yaw)*Math.cos(pitch)*dist,m=I(),vp=mul(persp(1,w/h,.01,100),look(ex,ey,ez)),mvp=mul(vp,m);gl.uniformMatrix4fv(gl.getUniformLocation(prog,'model'),false,m);gl.uniformMatrix4fv(gl.getUniformLocation(prog,'mvp'),false,mvp);for(const d of draws){gl.bindVertexArray(d.vao);gl.uniform4fv(gl.getUniformLocation(prog,'color'),d.color);if(d.indexed)gl.drawElements(gl.TRIANGLES,d.count,d.type,0);else gl.drawArrays(gl.TRIANGLES,0,d.count);}requestAnimationFrame(frame);}
+    status.textContent=draws.length?'RENDERED':'NO DRAWABLE PRIMITIVES';status.className='status '+(draws.length?'':'error');requestAnimationFrame(frame);
+  }catch(error){status.textContent='ERROR';status.className='status error';console.error(error);}
+})();
+</script>
+</body>
+</html>
