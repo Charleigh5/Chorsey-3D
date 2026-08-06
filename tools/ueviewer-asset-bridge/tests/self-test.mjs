@@ -23,16 +23,16 @@ try {
   assert.equal(run.status, 0, run.stderr || run.stdout);
   const summary = JSON.parse(run.stdout);
   assert.equal(summary.status, 'PASS');
-  assert.equal(sumary.packageCount, 1);
+  assert.equal(summary.packageCount, 1);
   assert.equal(summary.geometry.vertexCount, 3);
 
   const files = await readdir(temp);
   assert.deepEqual(files, ['evidence.html'], 'canonical output must be exactly one file');
   const html = await readFile(output, 'utf8');
-  assert.ok(html.include('READ-ONLY • OFFLINE • SOURCE-GOVERNED'));
+  assert.ok(html.includes('READ-ONLY • OFFLINE • SOURCE-GOVERNED'));
   assert.ok(!/<(?:script|link)[^>]+(?:src|href)=["']https?:/i.test(html));
   assert.ok(!/\bfetch\s*\(/.test(html));
-  const match = /<script id="evidence" type="application\/json">([s\S]*?)<\/script>/.exec(html);
+  const match = /<script id="evidence" type="application\/json">([\s\S]*?)<\/script>/.exec(html);
   assert.ok(match, 'embedded evidence payload missing');
   const evidence = JSON.parse(match[1]);
   assert.equal(evidence.manifest.schema, 'ueviewer.asset-bridge.manifest.v1');
