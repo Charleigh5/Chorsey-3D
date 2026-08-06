@@ -1,0 +1,16 @@
+{
+  "name": "ueviewer-asset-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only UEViewer wrapper that emits one self-contained glTF evidence HTML package.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:sample": "node src/bridge.mjs build --game-dir fixtures/AuthorizedGame --package SamplePackage.upk --gltf fixtures/triangle.gltf --object SampleTriangle --output artifacts/sample-evidence.html --acknowledge-read-only I_OWN_OR_AM_AUTHORIZED --no-open",
+    "test": "node tests/self-test.mjs",
+    "test:browser": "node tests/browser-smoke.mjs",
+    "test:all": "npm test && npm run test:browser"
+  }
+}
