@@ -1,0 +1,57 @@
+name: UEViewer Asset Bridge QA
+
+on:
+  pull_request:
+    paths:
+      - 'tools/ueviewer-asset-bridge/**'
+      - '.github/workflows/ueviewer-asset-bridge.yml'
+  push:
+    branches:
+      - 'feature/ueviewer-asset-bridge-v1'
+    paths:
+      - 'tools/ueviewer-asset-bridge/**'
+      - '.github/workflows/ueviewer-asset-bridge.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  fixture-and-browser-qa:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/ueviewer-asset-bridge
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run dependency-free contract tests
+        run: npm test
+
+      - name: Build canonical fixture evidence
+        run: npm run build:sample
+
+      - name: Install pinned browser-test dependency
+        run: npm install --no-save --no-audit --no-fund playwright@1.55.0
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run offline WebGL browser smoke test
+        run: npm run test:browser
+
+      - name: Upload evidence and browser proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ueviewer-asset-bridge-${{ github.run_id }}
+          path: |
+            tools/ueviewer-asset-bridge/artifacts/sample-evidence.html
+            tools/ueviewer-asset-bridge/artifacts/browser-smoke.png
+          if-no-files-found: warn
+          retention-days: 14
