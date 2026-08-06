@@ -30,6 +30,16 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Verify JavaScript source integrity
+        run: |
+          node --check src/bridge.mjs
+          node --check src/lib/core.mjs
+          node --check src/lib/gltf.mjs
+          node --check src/lib/umodel.mjs
+          node --check src/lib/evidence.mjs
+          node --check tests/self-test.mjs
+          node --check tests/browser-smoke.mjs
+
       - name: Run dependency-free contract tests
         run: npm test
 
